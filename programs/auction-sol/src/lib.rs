@@ -34,7 +34,7 @@ pub mod auction_dapp {
         msg!("Bidding for {} at {} by {} is initialized", name, amount, ctx.accounts.bidder.key());
         let auction = &mut ctx.accounts.auction;
 
-        require!(!auction.has_ended, Errors::HasEnded);
+        require!(!auction.has_ended, Errors::HasClosed);
         require!(amount > auction.last_bid, Errors::InsufficentBid);
 
         auction.last_bid = amount;
@@ -45,14 +45,14 @@ pub mod auction_dapp {
         Ok(())
     }
 
-    pub fn end(ctx: Context<EndAuction>, name: String) -> Result<()> {
+    pub fn close(ctx: Context<CloseAuction>, name: String) -> Result<()> {
         msg!("Closing auction for {}", name);
         let auction = &mut ctx.accounts.auction;
         let clock = Clock::get().unwrap();
         let timestamp = clock.unix_timestamp;
         let duration = (timestamp - auction.started_at) / 60;
 
-        require!(duration >= auction.duration.into(), Errors::HasNotEnded);
+        require!(duration >= auction.duration.into(), Errors::HasNotClosed);
 
         auction.has_ended = true;
 
@@ -65,8 +65,8 @@ pub mod auction_dapp {
         let lamports_transfer_instruction = system_instruction::transfer(&winner, &auction.creator, auction.last_bid.into());
         anchor_lang::solana_program::program::invoke_signed(
             &lamports_transfer_instruction,
+            &[ctx.accounts.winner.to_account_info(), ctx.accounts.creator.clone(), ctx.accounts.system_program.to_account_info()],
             &[],
-            &[]
         ).unwrap();
 
         Ok(())
@@ -95,11 +95,13 @@ pub struct Bidding<'info> {
 
 #[derive(Accounts)]
 #[instruction(name: String)]
-pub struct EndAuction<'info> {
+pub struct CloseAuction<'info> {
     #[account(mut, seeds = [name.as_bytes()], bump, close = creator)]
     pub auction: Account<'info, Auction>,
-    #[account(mut, constraint = creator.key() == auction.creator)]
-    pub creator: Signer<'info>,
+    #[account(mut)]
+    pub winner: Signer<'info>,
+    #[account(mut)]
+    pub creator: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
 }
 
@@ -131,11 +133,11 @@ pub enum Errors {
     #[msg("String is too long")]
     MaxStrLenExceeded,
 
-    #[msg("Auction has ended")]
-    HasEnded,
+    #[msg("Auction has closed")]
+    HasClosed,
 
-    #[msg("Auction has not ended")]
-    HasNotEnded,
+    #[msg("Auction has not closed")]
+    HasNotClosed,
 
     #[msg("Cannot perform this operation")]
     NotCreator,
