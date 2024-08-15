@@ -23,7 +23,7 @@ bot.command("auction", async ctx => {
                 {
                     parse_mode : "HTML",
                     ...Markup.inlineKeyboard([
-                        [Markup.button.callback("Enter the auction name", "name")]
+                        [Markup.button.callback("Enter the auction name ✅", "name")]
                     ])
                 }
             )
