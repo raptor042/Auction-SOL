@@ -56,10 +56,7 @@ pub mod auction_dapp {
 
         auction.has_ended = true;
 
-        let winner = match auction.winner {
-            Some(key) => key,
-            None => panic!("A fatal error just occured.")
-        };
+        let winner = auction.winner.unwrap();
         msg!("Closed auction for {} and the winner is {}", name, winner);
 
         let lamports_transfer_instruction = system_instruction::transfer(&winner, &auction.creator, auction.last_bid.into());
@@ -100,6 +97,7 @@ pub struct CloseAuction<'info> {
     pub auction: Account<'info, Auction>,
     #[account(mut)]
     pub winner: Signer<'info>,
+    /// CHECK: Creator's address
     #[account(mut)]
     pub creator: AccountInfo<'info>,
     pub system_program: Program<'info, System>,

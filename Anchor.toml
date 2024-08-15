@@ -7,11 +7,17 @@ skip-lint = false
 [programs.localnet]
 auction_sol = "EB23s1ATNmzikboXtK7QWwvZjFEd2wdB34X4tu6p7B5m"
 
+[programs.devnet]
+auction_sol = "EB23s1ATNmzikboXtK7QWwvZjFEd2wdB34X4tu6p7B5m"
+
+[programs.mainnet]
+auction_sol = "EB23s1ATNmzikboXtK7QWwvZjFEd2wdB34X4tu6p7B5m"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "devnet"
 wallet = "/Users/benjichimex/.config/solana/id.json"
 
 [scripts]
